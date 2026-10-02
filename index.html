@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Math Monster Pet</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta property="og:title" content="Math Monster Pet"><meta property="og:description" content="Feed your monster by solving math questions. Free, for ages 4-10."><meta name="description" content="A free math game for kids aged 4-10. Feed your monster by solving questions."><meta name="theme-color" content="#7b4dff">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#d6f1ff;--bg2:#eaffdc;--card:#fff;--ink:#2b2350;--mute:#6a6490;--accent:#7b4dff;--good:#2fbf71;--sun:#ffd23f;--line:#e3dcff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#1c1a3d;--bg2:#17314a;--card:#2a2760;--ink:#f3f0ff;--mute:#b5afe0;--line:#3d3a7a}}
+:root[data-theme="dark"]{--bg1:#1c1a3d;--bg2:#17314a;--card:#2a2760;--ink:#f3f0ff;--mute:#b5afe0;--line:#3d3a7a}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:linear-gradient(var(--bg1),var(--bg2)) fixed;color:var(--ink);font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif;font-size:18px}
+#app{max-width:480px;margin:0 auto;padding:16px 16px 28px}
+h1{font-size:30px;margin:8px 0 4px;text-align:center}
+.sub{text-align:center;color:var(--mute);margin:0 0 12px}
+.card{background:var(--card);border-radius:24px;padding:16px;margin:12px 0;box-shadow:0 6px 0 var(--line)}
+.btn{font:inherit;font-weight:700;font-size:22px;border:0;border-radius:20px;padding:16px 20px;background:var(--accent);color:#fff;width:100%;box-shadow:0 5px 0 rgba(0,0,0,.2);cursor:pointer;min-height:60px}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.alt{background:var(--sun);color:#2b2350}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chip{flex:1;font:inherit;font-weight:600;font-size:20px;padding:12px;border-radius:16px;border:3px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;min-height:52px}
+.chip.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.sw{width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;box-shadow:0 0 0 3px var(--line)}
+.sw.on{box-shadow:0 0 0 4px var(--ink)}
+.bar{height:16px;border-radius:9px;background:var(--line);overflow:hidden;margin:4px 0 10px}
+.bar i{display:block;height:100%;border-radius:9px;transition:width .4s}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge{background:var(--sun);color:#2b2350;border-radius:14px;padding:4px 12px;font-weight:700}
+.mon{width:min(62vw,240px);display:block;margin:0 auto}
+.mon.small{width:110px}
+.mon.eat{animation:hop .5s}
+@keyframes hop{40%{transform:translateY(-14px) scale(1.04)}}
+.q{font-size:28px;font-weight:700;text-align:center;margin:6px 0}
+.vis{font-size:34px;text-align:center;line-height:1.3;min-height:44px;word-break:break-word}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ans{font:inherit;font-size:30px;font-weight:700;border-radius:20px;border:3px solid var(--line);background:var(--card);color:var(--ink);min-height:76px;cursor:pointer}
+.ans:disabled{cursor:default}
+.ans.bad{background:#ffd9d0;color:#2b2350;border-color:#ff8a3d}
+.ans.good{background:#c8f5dc;color:#2b2350;border-color:#2fbf71}
+.msg{min-height:30px;text-align:center;font-weight:600;margin:10px 0}
+.link{background:none;border:0;font:inherit;color:var(--mute);text-decoration:underline;cursor:pointer;padding:8px}
+input{font:inherit;font-size:22px;width:100%;padding:12px;border-radius:16px;border:3px solid var(--line);background:var(--card);color:var(--ink)}
+small{color:var(--mute)}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-top:6px}.g3 small{display:block;font-size:13px}.themed{color:#2b2350}.themed small{color:#5a5482}
+:focus-visible{outline:4px solid var(--sun);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.mon.eat{animation:none}.bar i{transition:none}}
+</style></head><body><div id="app"></div>
+<script>
+const $=s=>document.querySelector(s),R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[R(0,a.length-1)];
+const AGES={a:'4-5',b:'6-7',c:'8-10'},COLORS=['#7b4dff','#ff5c8a','#2fbf71','#ff9f1c'],FOOD=['🍎','⭐','🍪','🍓','🐟','🍌'];
+let DB={cur:0,list:[]},S=null,view='setup',setup={age:null,color:COLORS[0],name:''},Q=null,mood='happy',sure=0,AC,T0=Date.now();
+try{const d=JSON.parse(localStorage.getItem('mmp2'));if(d&&d.list)DB=d;else{const o=JSON.parse(localStorage.getItem('mmp1'));if(o&&o.name)DB.list=[o]}}catch(e){}
+if(DB.list.length){S=DB.list[Math.min(DB.cur,DB.list.length-1)];fix();view='home'}
+const save=()=>{try{localStorage.setItem('mmp2',JSON.stringify(DB))}catch(e){}};
+const lvl=()=>Math.min(3,1+Math.floor(S.xp/60)),LV=()=>1+Math.floor(S.xp/60);
+const fullness=()=>Math.max(10,Math.round(S.full-(Date.now()-S.fed)/36e5*8));
+
+function monster(c,m,small,st=1,hat=''){
+ const mouth={happy:'<path d="M80 118q20 20 40 0" stroke="#2b2350" stroke-width="5" fill="none" stroke-linecap="round"/>',
+ hungry:'<ellipse cx="100" cy="124" rx="9" ry="7" fill="#2b2350"/>',
+ eat:'<ellipse cx="100" cy="122" rx="20" ry="16" fill="#2b2350"/><ellipse cx="100" cy="130" rx="10" ry="6" fill="#ff5c8a"/>',
+ oops:'<path d="M82 128q18-14 36 0" stroke="#2b2350" stroke-width="5" fill="none" stroke-linecap="round"/>'}[m];
+ return `<svg viewBox="0 0 200 200" class="mon ${small?'small':''} ${m}" role="img" aria-label="Your monster, feeling ${m}">
+<ellipse cx="100" cy="190" rx="55" ry="7" fill="#000" opacity=".12"/>
+${st===3?'<path d="M45 100q-25 50-10 82h130q15-32-10-82z" fill="#ff5c8a"/>':''}
+<g transform="translate(100 190) scale(${st===1?.82:1}) translate(-100 -190)">
+<path d="M52 62l-14-34 34 18zM148 62l14-34-34 18z" fill="${c}"/>
+<ellipse cx="66" cy="180" rx="18" ry="9" fill="${c}"/><ellipse cx="134" cy="180" rx="18" ry="9" fill="${c}"/>
+<ellipse cx="100" cy="115" rx="68" ry="68" fill="${c}"/>
+${st>=2?'<ellipse cx="60" cy="112" rx="9" ry="6" fill="#ff5c8a" opacity=".5"/><ellipse cx="140" cy="112" rx="9" ry="6" fill="#ff5c8a" opacity=".5"/>':''}
+<ellipse cx="100" cy="142" rx="40" ry="34" fill="#fff" opacity=".28"/>
+<circle cx="78" cy="92" r="15" fill="#fff"/><circle cx="122" cy="92" r="15" fill="#fff"/>
+<circle cx="80" cy="94" r="7" fill="#2b2350"/><circle cx="120" cy="94" r="7" fill="#2b2350"/>${mouth}
+${st===3?'<path d="M100 56l5 10 11 1-8 8 2 11-10-5-10 5 2-11-8-8 11-1z" fill="#ffd23f"/>':''}</g>
+${hat?`<text x="100" y="${st===1?84:60}" font-size="44" text-anchor="middle">${hat}</text>`:''}</svg>`}
+const TOP={a:[['count','Counting'],['compare','Bigger or smaller'],['add','Adding pictures'],['logic','Brain puzzles']],b:[['add','Adding'],['sub','Subtracting'],['pattern','Number patterns'],['logic','Brain puzzles']],c:[['mult','Times tables'],['add','Big addition'],['sub','Big subtraction'],['div','Division'],['frac','Fractions'],['word','Word problems'],['logic','Brain puzzles']]};
+const tpOf=()=>(S.tp||{})[S.age]||[];
+function pk(names,max){const tp=tpOf(),on=names.map((n,i)=>[n,i+1]).filter(([n])=>tp.includes(n));return on.length?pick(on)[1]:R(1,max)}
+const unlocked=()=>{const h=S.hist||[];return h.length>=8&&h.reduce((t,x)=>t+x,0)/h.length>=.7};
+const sh=a=>a.slice().sort(()=>Math.random()-.5);
+function mk(q,a,h,vis,o,lg){
+ if(!o){const n=S.age==='a'?3:4,s=new Set([a]),min=S.age==='a'?1:0;let g=0;
+  while(s.size<n&&g++<60){const v=a+R(1,Math.max(3,Math.round(a*.3)))*(Math.random()<.5?-1:1);if(v>=min)s.add(v)}o=[...s]}
+ return{q,a,h,vis,o:sh(o),logic:lg}}
+
+function make(){const tp=tpOf();if((unlocked()||tp.includes('logic'))&&(!tp.length||tp.includes('logic'))&&Math.random()<(tp.length===1&&tp[0]==='logic'?1:.35))return logic();const L=lvl();let q,a,h,vis='',o;
+ if(S.age==='a'){const k=pk(['count','compare','add'],3),f=pick(FOOD);
+  if(k===1){const n=R(1,L===1?5:10);vis=f.repeat(n);q='How many can you count?';a=n;h=['Touch each picture once and say the numbers as you go: 1, 2, 3...','Try it with 3 apples: touch and say 1, 2, 3. The last number you say is how many. Do yours the same way and do not skip any.']}
+  else if(k===2){const x=R(1,10);let y=R(1,10);while(y===x)y=R(1,10);q=`Which number is bigger: ${x} or ${y}?`;a=Math.max(x,y);o=[x,y];h=['Count 1, 2, 3, 4... The number you say later is the bigger one.','Example: 2 and 6. Counting up, you say 6 later, so 6 is bigger. Count up and see which of yours comes later.']}
+  else{const x=R(1,L===1?3:5),y=R(1,L===1?2:5);vis=f.repeat(x)+' + '+f.repeat(y);q=`${x} + ${y} = ?`;a=x+y;h=['Count the first group. Then keep counting the second group from there.','Example: 2 + 3. Say 2, then count on: 3, 4, 5. Use your fingers to keep track of the second group.']}
+ }else if(S.age==='b'){const k=pk(['add','sub','pattern'],L===3?3:2),m=L===1?10:20;
+  if(k===1){const x=R(0,m),y=R(0,m-x);q=`${x} + ${y} = ?`;a=x+y;h=['Start at the bigger number and count up the smaller one on your fingers.','Example: 3 + 5. Start at 5, hold up 3 fingers: 6, 7, 8. Do yours the same way.']}
+  else if(k===2){const x=R(1,m),y=R(0,x);q=`${x} − ${y} = ?`;a=x-y;h=['Start at the first number and count backwards the second number.','Example: 9 − 4. Start at 9 and step back 4 times: 8, 7, 6, 5. Do yours the same way.']}
+  else{const s=pick([2,5,10]),st=R(0,3),seq=[1,2,3,4].map(i=>s*(st+i));q=`What comes next? ${seq.join(', ')}, ?`;a=s*(st+5);h=['Look at the jump between neighbors. Is it the same each time?','Example: 3, 6, 9, ? The jump is 3 each time, so add 3 to the last number. Find your jump, then add it.']}
+ }else{const k=pk(['mult','add','sub','div','frac','word'],[0,3,4,6][L]);
+  if(k===1){const x=R(2,L===1?5:L===2?10:12),y=R(2,L===3?12:10);q=`${x} × ${y} = ?`;a=x*y;
+   h=[y>5?`Split ${y} into 5 and ${y-5}. Work out ${x} × 5 and ${x} × ${y-5}, then add them.`:`Count up in ${x}s, ${y} times, using your fingers to keep track.`,'Example: 13 × 3. Split 13 into 10 and 3: 10 × 3 = 30 and 3 × 3 = 9, then 30 + 9 = 39. Split yours the same way.']}
+  else if(k===2){const m=L===1?50:99,x=R(10,m),y=R(10,m);q=`${x} + ${y} = ?`;a=x+y;h=['Split each number into tens and ones. Add the tens, add the ones, then join them.','Example: 27 + 15. Tens: 20 + 10 = 30. Ones: 7 + 5 = 12. Join: 30 + 12 = 42. Do yours the same way.']}
+  else if(k===3){const x=R(30,99),y=R(10,x-5);q=`${x} − ${y} = ?`;a=x-y;h=['Take away the tens first, then take away the ones.','Example: 52 − 17. 52 − 10 = 42, then 42 − 7 = 35. Do yours in the same two steps.']}
+  else if(k===4){const y=R(2,L===2?5:10),z=R(2,L===2?10:12);q=`${y*z} ÷ ${y} = ?`;a=z;h=[`Division is multiplication backwards. Ask: what times ${y} makes ${y*z}?`,`Example: 36 ÷ 12. Ask 12 × ? = 36. Try 12 × 2, 12 × 3... Count up in ${y}s until you reach ${y*z}.`]}
+  else if(k===5){const d=pick([2,3,4,5]),n=R(2,6);q=`What is 1/${d} of ${d*n}?`;a=n;h=[`"1/${d} of" means share equally into ${d} groups. How many are in one group?`,'Example: 1/6 of 18. Share 18 into 6 equal groups: 18 ÷ 6 = 3 in each. Do yours the same way.']}
+  else{const x=R(3,9),y=R(3,9);q=`Each box holds ${y} cookies. How many cookies are in ${x} boxes?`;a=x*y;h=['This is a "groups of" problem: number of boxes times cookies in each box.','Example: 2 bags with 10 apples each is 2 × 10 = 20 apples. Write yours as a times problem.']}
+ }
+ return mk(q,a,h,vis,o)}
+
+function logic(){const t=S.age;let q,a,h,vis='',o;const k=R(1,3);
+ if(t==='a'){
+  if(k===1){const E=[['🍎','🍌'],['🐶','🐱'],['🔴','🔵'],['⭐','🌙']],[p,r]=pick(E);vis=p+r+p+r+p;q='What comes next?';a=r;o=[p,r,pick(FOOD.filter(x=>x!==p&&x!==r))];h=['Say the pattern out loud. Find the little group that repeats.','Example: 🍎🍌🍎🍌🍎 ? Apple, banana, apple, banana... follow the same order. Say yours out loud and keep it going.']}
+  else if(k===2){const n=R(2,9),bf=Math.random()<.5;q=`What number comes just ${bf?'before':'after'} ${n}?`;a=bf?n-1:n+1;h=['Count out loud from 1. Notice which number you say right next to it.','Example: counting 4, 5, 6 shows what is just before and just after 5. Count like that for yours.']}
+  else{const fr=sh(['🍎','🍌','🍓','🍇']),an=sh(['🐶','🐱','🐭','🐸']),fo=Math.random()<.5,g=fo?fr:an,od=(fo?an:fr)[0];q='Which one does not belong?';a=od;o=[g[0],g[1],g[2],od];h=['Look at all of them. What do most of them have in common?','Example: 🚗🚌🚲🍌. Three are things that take you places and one is food, so 🍌 is different. Find what most of yours share.']}
+ }else if(t==='b'){
+  if(k===1){const x=R(1,9),y=R(1,9);q=`${x} + ? = ${x+y}`;a=y;h=['Start at the first number. How many steps up do you take to reach the total?','Example: 2 + ? = 6. Count up from 2: 3, 4, 5, 6. That took 4 steps, so ? is 4. Do yours the same way.']}
+  else if(k===2){const s=R(1,9),d=R(2,5);q=`What is missing? ${s}, ${s+d}, ?, ${s+3*d}`;a=s+2*d;h=['Look at the numbers on both sides of the gap. How big is each jump?','Example: 4, 7, ?, 13. From 4 to 7 is a jump of 3, so keep jumping 3 from 7. Find your jump and use it.']}
+  else{const ev=Math.random()<.5,pool=sh([2,4,6,8,10,12,14,16,18]),g=pool.slice(0,3).map(x=>ev?x:x+1),od=ev?pool[3]+1:pool[3];q='Which number is the odd one out?';a=od;o=[...g,od];h=['Look at the last digit of each. What do most of them share?','Example: 3, 5, 9, 12. The first three are odd (end in 1, 3, 5, 7, 9) and 12 is even, so 12 is the odd one out. Check the last digits of yours.']}
+ }else{
+  if(k===1){const s=R(2,9),g=R(1,2),d=[g,g+1,g+2,g+3];let c=s;const sq=[c];d.forEach(x=>sq.push(c+=x));q=`What comes next? ${sq.slice(0,4).join(', ')}, ?`;a=sq[4];h=['Look at the gaps between neighbors. Do the gaps themselves follow a pattern?','Example: 1, 2, 4, 7, ? The gaps are 1, 2, 3, so the next gap is 4. Write down your gaps and extend them.']}
+  else if(k===2){const s=R(2,3),r=R(2,3),sq=[0,1,2,3,4].map(i=>s*r**i);q=`What comes next? ${sq.slice(0,4).join(', ')}, ?`;a=sq[4];h=['Compare neighbors. Is the jump growing by adding, or by multiplying?','Example: 1, 3, 9, ? Each number is 3 times the one before. Find what your numbers multiply by, then apply it once more.']}
+  else if(k===3){const n=R(5,30),m=R(3,15),ad=Math.random()<.5;q=ad?`I think of a number and add ${m}. I get ${n+m}. What is my number?`:`I think of a number and subtract ${m}. I get ${n}. What is my number?`;a=ad?n:n+m;h=['Work backwards. Undo what was done to the number.','Example: "I add 4 and get 11." Undo the adding: 11 − 4 = 7. If something was taken away, undo it by adding. Do yours.']}
+ }
+ if(!q){const x=R(2,9),y=R(3,9);q=`? × ${y} = ${x*y}`;a=x;h=['Ask: what number, taken '+y+' times, makes the total? Try counting up in '+y+'s.','Example: ? × 4 = 20. Count up in 4s: 4, 8, 12, 16, 20. That took 5 jumps, so ? is 5. Do the same with yours.']}
+ return mk(q,a,h,vis,o,1)}
+
+function beep(ok){if(S&&S.mute)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime;
+ (ok?[660,880]:[300]).forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),s=t+i*.12;o.frequency.value=f;g.gain.setValueAtTime(.15,s);g.gain.exponentialRampToValueAtTime(.001,s+.2);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+.22)})}catch(e){}}
+function speak(){try{const t=Q.cur.q.replace(/×/g,' times ').replace(/÷/g,' divided by ').replace(/−/g,' minus ').replace(/\+/g,' plus ').replace(/=/g,' equals ').replace(/\?/g,'');speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(t))}catch(e){}}
+
+function vSetup(){return `<h1>Math Monster Pet</h1><p class="sub">Adopt a monster. Solve math to feed it!</p>
+<div class="card">${monster(setup.color,'happy')}
+<small>Pick a color</small><div class="row" style="margin:6px 0 12px">${COLORS.map(c=>`<button class="sw ${c===setup.color?'on':''}" style="background:${c}" aria-label="Color ${c}" onclick="setup.color='${c}';render()"></button>`).join('')}</div>
+<small>Name your monster</small><input id="nm" maxlength="12" placeholder="Bobo" value="${setup.name}" oninput="setup.name=this.value">
+<div style="height:12px"></div><small>How old are you?</small>
+<div class="row" style="margin-top:6px">${Object.keys(AGES).map(k=>`<button class="chip ${setup.age===k?'on':''}" onclick="setup.age='${k}';render()">${AGES[k]}</button>`).join('')}</div></div>
+<button class="btn" ${setup.age?'':'disabled'} onclick="start()">Adopt my monster!</button><p class="sub" style="margin-top:14px">No ads, no accounts. Progress stays on this device.</p>${DB.list.length?'<button class="link" style="width:100%" onclick="view=\'profiles\';render()">Back to players</button>':''}`}
+function start(){const n=(setup.name||'').replace(/[<>&"'`]/g,'').trim().slice(0,12)||'Bobo';
+ S={age:setup.age,color:setup.color,name:n,xp:0,coins:0,full:50,fed:Date.now(),ok:0,tot:0,mute:false};DB.list.push(S);DB.cur=DB.list.length-1;fix();save();view='home';render()}
+
+const STG=['Baby','Kid','Hero'],stg=()=>LV()<3?1:LV()<6?2:3,dayN=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5);
+const HATS=[['👑',30,'Crown'],['🎩',20,'Top hat'],['🎀',15,'Bow'],['🧢',15,'Cap'],['🎓',25,'Grad cap']],BGS=[['#bde9ff',0,'Sky'],['#ffd1a8',20,'Sunset'],['#ffc8e0',20,'Candy'],['#c9f2b5',15,'Meadow'],['#e0d4ff',15,'Lilac']];
+const BADGES=[['fed','🍎','First meals',s=>s.tot>=5],['fifty','🌟','Math star',s=>s.tot>=50],['run','🔥','10 in a row',s=>s.best>=10],['brain','🧠','Brain puzzler',s=>s.lg>=5],['rev','🔍','Mistake fixer',s=>s.rev>=1],['s3','📅','3-day streak',s=>s.streak>=3],['s7','🏆','7-day streak',s=>s.streak>=7],['kid','🐣','Grew up',s=>LV()>=3],['shop','🛍️','First buy',s=>s.own.length>0]];
+function fix(){const d={own:[],badges:[],streak:0,fz:1,hat:'',bg:'',last:0,best:0,run:0,lg:0,rev:0};for(const k in d)if(S[k]==null)S[k]=d[k]}
+function bump(){const d=dayN();if(S.last===d)return '';const g=d-S.last;let m='';
+ if(!S.last||g===1)S.streak++;else if(g===2&&S.fz>0){S.fz--;S.streak++;m='❄️ A streak freeze saved your streak! '}else S.streak=1;
+ S.last=d;S.coins+=10;Q.coin+=10;if(S.streak%7===0&&S.fz<2){S.fz++;m+='You earned a streak freeze! '}
+ return m+'Daily bonus: +10 🪙'}
+const FEEDBACK_URL='';
+let DP=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();DP=e;if(view==='home')render()});
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+function inst(){DP.prompt();DP.userChoice.finally(()=>{DP=null;render()})}
+function tgl(id){S.tp=S.tp||{};const a=(S.tp[S.age]||[]).slice(),i=a.indexOf(id);i<0?a.push(id):a.splice(i,1);S.tp[S.age]=a;save();render()}
+const tpick=()=>{const tp=tpOf();return `<div class="card"><small>Practice focus ${tp.length?'':'(all topics mixed)'}</small><div class="row" style="margin-top:6px">${TOP[S.age].map(([id,l])=>`<button class="chip ${tp.includes(id)?'on':''}" style="flex:0 0 auto;font-size:16px;min-height:44px;padding:8px 12px" onclick="tgl('${id}')">${l}</button>`).join('')}</div><small style="display:block;margin-top:8px">Pick topics to practice only those. Pick none for a mix.</small></div>`};
+const vInstall=()=>standalone()?'':`<div class="card"><small>Play like an app</small>${DP?'<button class="btn" style="margin-top:8px" onclick="inst()">📲 Install app</button>':`<p style="margin:6px 0 0;font-size:16px">${/iphone|ipad|ipod/i.test(navigator.userAgent)?'Tap the Share button, then Add to Home Screen.':'Open the browser menu, then choose Install app or Add to Home screen.'}</p>`}</div>`;
+function vHome(){const f=fullness(),m=f>=60?'happy':'hungry',st=stg();
+ return `<div class="top"><b style="font-size:26px">${S.name}</b><span class="badge">Level ${LV()}</span><span class="badge">🪙 ${S.coins}</span></div>
+<p class="sub" style="margin:2px 0 0">${STG[st-1]} monster &nbsp; 🔥 ${S.streak} day${S.streak===1?'':'s'} &nbsp; ❄️ ${S.fz} freeze${S.fz===1?'':'s'}</p>
+<div class="card ${S.bg?'themed':''}" style="${S.bg?'background:'+S.bg:''}">${monster(S.color,m,0,st,S.hat)}<p class="msg">${m==='happy'?S.name+' is happy and full!':S.name+' is hungry. Feed with math!'}</p>
+<small>Level progress</small><div class="bar"><i style="width:${(S.xp%60)/60*100}%;background:var(--accent)"></i></div>
+<small>Tummy</small><div class="bar"><i style="width:${f}%;background:var(--good)"></i></div></div>
+<button class="btn alt" onclick="feed()">🍎 Feed (5 questions)</button><p class="sub" style="margin:10px 0 0">${unlocked()?'🧠 Brain puzzles are on! They mix into your rounds.':'🧠 Get most answers right on the first try to unlock brain puzzles.'}</p>
+<div class="row" style="margin-top:12px"><button class="chip" onclick="view='shop';render()">🛍️ Shop</button><button class="chip" onclick="view='profiles';render()">👥 Players</button></div>
+<div class="card"><small>Badges</small><div class="g3">${BADGES.map(b=>`<div style="${S.badges.includes(b[0])?'':'filter:grayscale(1);opacity:.35'}"><div style="font-size:30px">${b[1]}</div><small>${b[2]}</small></div>`).join('')}</div></div>
+${tpick()}<div class="card"><small>Questions for age</small><div class="row" style="margin-top:6px">${Object.keys(AGES).map(k=>`<button class="chip ${S.age===k?'on':''}" onclick="S.age='${k}';save();render()">${AGES[k]}</button>`).join('')}</div></div>
+${vInstall()}<div class="row" style="justify-content:space-between"><button class="link" onclick="S.mute=!S.mute;save();render()">${S.mute?'🔇 Sound off':'🔊 Sound on'}</button><button class="link" id="rs" onclick="reset()">Remove player</button></div>${FEEDBACK_URL?`<p class="sub"><a href="${FEEDBACK_URL}" target="_blank" rel="noopener" style="color:inherit">💬 Send feedback</a></p>`:''}`}
+function reset(){if(!sure){sure=1;$('#rs').textContent='Tap again to remove this player';return}
+ DB.list.splice(DB.cur,1);DB.cur=0;sure=0;save();setup={age:null,color:COLORS[0],name:''};
+ if(DB.list.length){S=DB.list[0];fix();view=DB.list.length>1?'profiles':'home'}else{S=null;view='setup'}render()}
+function vShop(){const it=(k,[v,c,l])=>{const own=!c||S.own.includes(k+v),on=(k==='h'?S.hat:S.bg)===v;
+ return `<button class="ans" style="font-size:18px;min-height:96px;padding:6px" ${!own&&S.coins<c?'disabled':''} onclick="buy('${k}','${v}',${c})"><div style="font-size:34px">${k==='h'?v:`<span style="display:inline-block;width:34px;height:34px;border-radius:50%;background:${v}"></span>`}</div>${l}<br><small>${on?'Wearing':own?'Tap to use':'🪙 '+c}</small></button>`};
+ return `<div class="top"><button class="link" onclick="home()">← Back</button><span class="badge">🪙 ${S.coins}</span></div><h1>Shop</h1>
+<div class="card ${S.bg?'themed':''}" style="${S.bg?'background:'+S.bg:''}">${monster(S.color,'happy',0,stg(),S.hat)}</div>
+<p class="sub">Hats</p><div class="grid">${HATS.map(x=>it('h',x)).join('')}</div><p class="sub" style="margin-top:16px">Backgrounds</p><div class="grid">${BGS.map(x=>it('b',x)).join('')}</div>`}
+function buy(k,v,c){if(c&&!S.own.includes(k+v)){if(S.coins<c)return;S.coins-=c;S.own.push(k+v)}
+ if(k==='h')S.hat=S.hat===v?'':v;else S.bg=S.bg===v?'':v;beep(1);save();render()}
+function vProfiles(){return `<h1>Who is playing?</h1><div class="grid" style="margin:12px 0">${DB.list.map((p,i)=>`<button class="ans" style="font-size:20px;padding:10px" onclick="pickP(${i})">${monster(p.color,'happy',1,1,p.hat)}${p.name}</button>`).join('')}</div><button class="btn" onclick="newP()">+ New player</button>`}
+function pickP(i){DB.cur=i;S=DB.list[i];fix();save();view='home';render()}
+function newP(){setup={age:null,color:COLORS[0],name:''};view='setup';render()}
+function feed(list){Q={i:0,n:list?list.length:5,list,review:!!list,right:0,gain:0,coin:0,tries:0,bad:[],lock:0,show:0,msg:'',startL:LV(),startS:stg(),wasU:unlocked(),missed:[],nb:[],dmsg:''};Q.cur=list?list[0]:make();view='quiz';mood='happy';render()}
+function vQuiz(){const c=Q.cur;
+ return `<div class="top"><span class="badge">Question ${Q.i+1} of ${Q.n}${c.logic?' 🧠 Brain puzzle':''}</span><button class="link" onclick="speak()">🔊 Read it</button><button class="link" onclick="home()">Quit</button></div>
+${monster(S.color,mood,1,stg(),S.hat)}
+<div class="card"><div class="q">${c.q}</div><div class="vis">${c.vis}</div></div>
+<div class="grid">${c.o.map((v,i)=>`<button class="ans ${Q.bad.includes(v)?'bad':''} ${Q.show&&v===c.a?'good':''}" ${Q.bad.includes(v)||Q.lock?'disabled':''} onclick="pickA(${i})">${v}</button>`).join('')}</div>
+<p class="msg" aria-live="polite">${Q.msg}</p>`}
+function award(g,c,first,lg){S.xp+=g;S.coins+=c;S.full=Math.min(100,fullness()+8);S.fed=Date.now();Q.gain+=g;Q.coin+=c;S.tot++;S.hist=(S.hist||[]).concat(first?1:0).slice(-10);
+ S.run=first?S.run+1:0;S.best=Math.max(S.best,S.run);if(first&&lg)S.lg++;if(first&&Q.review)S.rev++;save()}
+function pickA(i){if(Q.lock)return;const c=Q.cur,v=c.o[i];
+ if(v===c.a){Q.lock=1;Q.show=1;mood='eat';const first=Q.tries===0,lg=c.logic;if(first){Q.right++;S.ok++}else if(!Q.review)Q.missed.push(c);
+  award(first?(lg?15:10):5,first?(lg?4:3):1,first,lg);beep(1);Q.msg=pick(['Yum! 🎉','Great job! ⭐','Nom nom!','You got it!']);render();setTimeout(next,1000)}
+ else{Q.tries++;Q.bad.push(v);mood='oops';beep(0);Q.msg=Q.tries===1?'🤔 Hint: '+c.h[0]:'💡 Trick: '+c.h[1];render()}}
+function next(){if(view!=='quiz')return;Q.i++;mood='happy';
+ if(Q.i>=Q.n){Q.dmsg=bump();Q.nb=BADGES.filter(b=>!S.badges.includes(b[0])&&b[3](S));Q.nb.forEach(b=>S.badges.push(b[0]));Q.rest=Date.now()-T0>9e5;if(Q.rest)T0=Date.now();save();view='done'}
+ else{Q.cur=Q.list?Q.list[Q.i]:make();Q.tries=0;Q.bad=[];Q.lock=0;Q.show=0;Q.msg=''}render()}
+function vDone(){const up=LV()>Q.startL,m=Q.missed.length;
+ return `<h1>${up?'Level up! 🎉':Q.review?'Review done!':'Round done!'}</h1>${monster(S.color,'happy',0,stg(),S.hat)}
+<div class="card" style="text-align:center"><div class="q">${'⭐'.repeat(Q.right)||'💪'}</div><p>${Q.right} of ${Q.n} right on the first try</p><p>+${Q.gain} XP &nbsp; +${Q.coin} 🪙</p>
+${Q.dmsg?`<p>${Q.dmsg}</p>`:''}${up?`<p><b>${S.name} is now level ${LV()}!</b></p>`:''}${stg()>Q.startS?`<p><b>✨ ${S.name} evolved into a ${STG[stg()-1]} monster!</b></p>`:''}
+${Q.nb.map(b=>`<p><b>${b[1]} New badge: ${b[2]}</b></p>`).join('')}${unlocked()&&!Q.wasU?'<p><b>🧠 Brain puzzles unlocked!</b></p>':''}${Q.rest?'<p>😴 You have played for a while. Great work! Time for a stretch or a rest.</p>':''}</div>
+${m&&!Q.review?`<button class="btn" style="margin-bottom:10px" onclick="feed(Q.missed)">🔍 Review ${m} tricky question${m>1?'s':''}</button>`:''}
+<button class="btn alt" onclick="feed()">Feed again</button><button class="link" style="width:100%" onclick="home()">Back home</button>`}
+function home(){view='home';mood='happy';render()}
+function render(){$('#app').innerHTML={setup:vSetup,home:vHome,quiz:vQuiz,done:vDone,shop:vShop,profiles:vProfiles}[view]()}
+render();
+try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)navigator.serviceWorker.register('sw.js')}catch(e){}
+</script></body></html>
